@@ -19,7 +19,7 @@ const clearCartBtn = document.getElementById('clearCartBtn');
 const msgArea = document.getElementById('msgArea');
 
 // 🔁 REPLACE THIS WITH YOUR GOOGLE APPS SCRIPT WEB APP URL
-const APP_SCRIPT_URL = 'https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec';
+const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz0MBB-PEZfoEE5ooab6emLbmG5nXMoXWEJFuJ-NyIZ0sN-RUd0OB6qG6T7rYaIqW3h/exec';
 
 // Helper: show message
 function showMessage(msg, isError = false) {
