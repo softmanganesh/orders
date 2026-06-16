@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi‑Wholesaler Order System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>📦 Place Your Order</h1>
+        <div id="msgArea"></div>
+
+        <!-- Wholesaler selection -->
+        <div class="form-group">
+            <label>🏪 Select Wholesaler</label>
+            <select id="wholesalerSelect">
+                <option value="">-- Choose wholesaler --</option>
+                <option value="WHOLESALER_A">Agencies Ltd.</option>
+                <option value="WHOLESALER_B">Best Distributors</option>
+                <option value="WHOLESALER_C">City Mart</option>
+            </select>
+        </div>
+
+        <!-- Customer name -->
+        <div class="form-group">
+            <label>Your Name</label>
+            <input type="text" id="customerName" placeholder="John Doe" required>
+        </div>
+
+        <!-- Item search (max 10 results) -->
+        <div class="form-group">
+            <label>🔍 Search Item</label>
+            <input type="text" id="itemSearch" placeholder="Type at least 2 characters..." autocomplete="off">
+            <div id="suggestionsGrid" class="suggestions-grid" style="display:none;">
+                <table>
+                    <thead><tr><th>Code</th><th>Item Name</th><th>Stock</th></tr></thead>
+                    <tbody id="suggestionsBody"></tbody>
+                </table>
+            </div>
+        </div>
+        <div id="stockDisplay" class="stock-info">📊 Select an item to see stock</div>
+
+        <!-- Quantity and Free -->
+        <div class="row">
+            <div class="col"><label>Qty</label><input type="number" id="qty" value="1" step="0.01" min="0"></div>
+            <div class="col"><label>Free Qty</label><input type="number" id="free" value="0" step="0.01" min="0"></div>
+            <div class="col"><button id="addBtn">+ Add to Order</button></div>
+        </div>
+
+        <!-- Cart table -->
+        <h3>🛒 Current Order</h3>
+        <table class="cart">
+            <thead><tr><th>Item Name</th><th>Item Code</th><th>Qty</th><th>Free</th><th>Action</th></tr></thead>
+            <tbody id="cartBody"><tr><td colspan="5">No items added yet</td></tr></tbody>
+        </table>
+
+        <div>
+            <button id="submitOrderBtn">✅ Submit Order</button>
+            <button id="clearCartBtn" class="btn-secondary">🗑 Clear Cart</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
