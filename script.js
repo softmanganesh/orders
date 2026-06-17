@@ -130,10 +130,10 @@ function addToCart() {
     freeInput.value = '0';
     showMessage(`Added ${selectedItem.itemname}`);
     // Clear search after adding
-searchInput.value = '';
-selectedItem = null;
-stockDisplay.innerHTML = '📊 Select an item to see stock';
-suggestionsGrid.style.display = 'none';
+    searchInput.value = '';
+    selectedItem = null;
+    stockDisplay.innerHTML = '📊 Select an item to see stock';
+    suggestionsGrid.style.display = 'none';
 }
 
 // Render cart table
