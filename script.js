@@ -129,6 +129,11 @@ function addToCart() {
     qtyInput.value = '1';
     freeInput.value = '0';
     showMessage(`Added ${selectedItem.itemname}`);
+    // Clear search after adding
+searchInput.value = '';
+selectedItem = null;
+stockDisplay.innerHTML = '📊 Select an item to see stock';
+suggestionsGrid.style.display = 'none';
 }
 
 // Render cart table
@@ -177,25 +182,37 @@ async function submitOrder() {
     try {
         submitBtn.disabled = true;
         submitBtn.textContent = 'Submitting...';
+
+        // ⚠️ Remove mode: 'no-cors' so we can read the response
         const response = await fetch(APP_SCRIPT_URL, {
             method: 'POST',
-            mode: 'no-cors',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(orderData)
         });
-        showMessage('Order submitted! It will be processed soon.');
-        cart = [];
-        renderCart();
-        customerNameInput.value = '';
-        // Optionally reload items or keep them
+
+        const result = await response.json();
+        if (result.success) {
+            const orderId = result.orderId || 'N/A';
+            showMessage(`✅ Order #${orderId} submitted! It will be processed soon.`);
+            // Clear cart
+            cart = [];
+            renderCart();
+            customerNameInput.value = '';
+            // Clear search input and selected item
+            searchInput.value = '';
+            selectedItem = null;
+            stockDisplay.innerHTML = '📊 Select an item to see stock';
+            suggestionsGrid.style.display = 'none';
+        } else {
+            showMessage('❌ Order failed: ' + (result.error || 'Unknown error'), true);
+        }
     } catch (err) {
-        showMessage('Error: ' + err.message, true);
+        showMessage('❌ Error: ' + err.message, true);
     } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = '✅ Submit Order';
     }
 }
-
 function escapeHtml(str) {
     return str.replace(/[&<>]/g, function(m) {
         if (m === '&') return '&amp;';
