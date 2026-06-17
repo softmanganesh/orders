@@ -1,7 +1,7 @@
 // Global variables
 let cart = [];
 let selectedItem = null;
-let currentItems = [];   // item list loaded from Google Apps Script
+let currentItems = [];
 
 // DOM elements
 const wholesalerSelect = document.getElementById('wholesalerSelect');
@@ -21,13 +21,23 @@ const msgArea = document.getElementById('msgArea');
 // 🔁 REPLACE THIS WITH YOUR GOOGLE APPS SCRIPT WEB APP URL
 const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwPr0sL6eP3xnU7_vSAUAJYoY31zUeP145gGZHrn7wOCRtWRx1bx6dblreMYJ32nXAm/exec';
 
-// Helper: show message
+// ---------- HELPER FUNCTIONS ----------
 function showMessage(msg, isError = false) {
     msgArea.innerHTML = `<div class="message ${isError ? 'error' : 'success'}">${msg}</div>`;
     setTimeout(() => msgArea.innerHTML = '', 4000);
 }
 
-// Fetch items for the selected wholesaler
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
+}
+
+// ---------- FETCH ITEMS ----------
 async function fetchItems(wholesalerId) {
     if (!wholesalerId) {
         currentItems = [];
@@ -36,13 +46,13 @@ async function fetchItems(wholesalerId) {
     }
     try {
         const url = `${APP_SCRIPT_URL}?wholesaler_id=${encodeURIComponent(wholesalerId)}`;
+        console.log('Fetching items from:', url); // debug
         const response = await fetch(url);
         if (!response.ok) throw new Error('Network error');
         const items = await response.json();
         if (!Array.isArray(items)) throw new Error('Invalid response');
         currentItems = items;
         stockDisplay.innerHTML = `📊 Loaded ${currentItems.length} items for ${wholesalerId}`;
-        // Clear search
         searchInput.value = '';
         suggestionsGrid.style.display = 'none';
     } catch (err) {
@@ -53,7 +63,7 @@ async function fetchItems(wholesalerId) {
     }
 }
 
-// Search items (max 10)
+// ---------- SEARCH AND SUGGESTIONS ----------
 function searchItems(term) {
     if (!term || term.length < 2) return [];
     const lowerTerm = term.toLowerCase();
@@ -65,7 +75,6 @@ function searchItems(term) {
         .slice(0, 10);
 }
 
-// Render suggestions grid
 function renderSuggestions(items) {
     suggestionsBody.innerHTML = '';
     if (items.length === 0) {
@@ -89,29 +98,39 @@ function selectItem(item) {
     stockDisplay.innerHTML = `📊 <strong>${item.itemname}</strong> | Stock: ${item.currentstock}`;
 }
 
-// Search as user types
+// Event: search as user types
 searchInput.addEventListener('input', (e) => {
     const term = e.target.value;
     const matches = searchItems(term);
     renderSuggestions(matches);
 });
 
-// Hide suggestions when clicking outside
+// Event: hide suggestions when clicking outside
 document.addEventListener('click', (e) => {
     if (!searchInput.contains(e.target) && !suggestionsGrid.contains(e.target)) {
         suggestionsGrid.style.display = 'none';
     }
 });
 
-// Add to cart
+// ---------- CART OPERATIONS ----------
 function addToCart() {
-    if (!selectedItem) { showMessage('Select an item first', true); return; }
+    console.log('Add to Cart button clicked'); // debug
+    if (!selectedItem) { 
+        showMessage('Select an item first', true); 
+        return; 
+    }
     let qty = parseFloat(qtyInput.value);
     let free = parseFloat(freeInput.value);
     if (isNaN(qty)) qty = 0;
     if (isNaN(free)) free = 0;
-    if (qty + free === 0) { showMessage('Qty or Free must be > 0', true); return; }
-    if (qty > selectedItem.currentstock) { showMessage('Insufficient stock', true); return; }
+    if (qty + free === 0) { 
+        showMessage('Qty or Free must be > 0', true); 
+        return; 
+    }
+    if (qty > selectedItem.currentstock) { 
+        showMessage('Insufficient stock', true); 
+        return; 
+    }
     
     const existing = cart.find(i => i.itemcode === selectedItem.itemcode);
     if (existing) {
@@ -136,7 +155,6 @@ function addToCart() {
     suggestionsGrid.style.display = 'none';
 }
 
-// Render cart table
 function renderCart() {
     if (cart.length === 0) {
         cartBody.innerHTML = '<tr><td colspan="5">No items added yet</td></tr>';
@@ -144,7 +162,8 @@ function renderCart() {
     }
     let html = '';
     cart.forEach((item, idx) => {
-        html += <tr>
+        // FIXED: using backticks (`) for template literal
+        html += `<tr>
                     <td>${escapeHtml(item.itemname)}</td>
                     <td>${item.itemcode}</td>
                     <td>${item.qty}</td>
@@ -162,9 +181,15 @@ function renderCart() {
     });
 }
 
-function clearCart() { if (cart.length) { cart = []; renderCart(); showMessage('Cart cleared'); } }
+function clearCart() { 
+    if (cart.length) { 
+        cart = []; 
+        renderCart(); 
+        showMessage('Cart cleared'); 
+    } 
+}
 
-// Submit order to Google Apps Script (POST)
+// ---------- SUBMIT ORDER ----------
 async function submitOrder() {
     const wholesaler = wholesalerSelect.value;
     const customer = customerNameInput.value.trim();
@@ -190,11 +215,11 @@ async function submitOrder() {
         });
 
         const result = await response.json();
+        console.log('Submit result:', result); // debug
 
         if (result.success) {
             const orderId = result.orderId || 'N/A';
             showMessage(`✅ Order #${orderId} submitted! It will be processed soon.`);
-            // Clear everything
             cart = [];
             renderCart();
             customerNameInput.value = '';
@@ -213,12 +238,12 @@ async function submitOrder() {
         submitBtn.textContent = '✅ Submit Order';
     }
 }
-// When wholesaler changes, fetch items for that wholesaler
+
+// ---------- EVENT LISTENERS ----------
 wholesalerSelect.addEventListener('change', (e) => {
     const val = e.target.value;
     if (val) {
         fetchItems(val);
-        // Clear cart when switching wholesaler (optional)
         if (cart.length > 0) {
             if (confirm('Switching wholesaler will clear your cart. Continue?')) {
                 cart = [];
