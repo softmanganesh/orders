@@ -183,7 +183,6 @@ async function submitOrder() {
         submitBtn.disabled = true;
         submitBtn.textContent = 'Submitting...';
 
-        // ✅ Remove 'mode: no-cors' to read the response
         const response = await fetch(APP_SCRIPT_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -207,6 +206,7 @@ async function submitOrder() {
             showMessage(`❌ Order failed: ${result.error || 'Unknown error'}`, true);
         }
     } catch (err) {
+        console.error('Submit error:', err);
         showMessage('❌ Network error: ' + err.message, true);
     } finally {
         submitBtn.disabled = false;
