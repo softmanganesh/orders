@@ -19,7 +19,7 @@ const clearCartBtn = document.getElementById('clearCartBtn');
 const msgArea = document.getElementById('msgArea');
 
 // 🔁 REPLACE THIS WITH YOUR GOOGLE APPS SCRIPT WEB APP URL
-const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxT3_UfD0VB9Iqk8x-w3J2EG-e2b8bPpcpvcHyIWB_1ToQDsinurZbQNkDAaJPhTdRb/exec';
+const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwPr0sL6eP3xnU7_vSAUAJYoY31zUeP145gGZHrn7wOCRtWRx1bx6dblreMYJ32nXAm/exec';
 
 // Helper: show message
 function showMessage(msg, isError = false) {
