@@ -19,7 +19,7 @@ const clearCartBtn = document.getElementById('clearCartBtn');
 const msgArea = document.getElementById('msgArea');
 
 // 🔁 REPLACE THIS WITH YOUR GOOGLE APPS SCRIPT WEB APP URL
-const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz0MBB-PEZfoEE5ooab6emLbmG5nXMoXWEJFuJ-NyIZ0sN-RUd0OB6qG6T7rYaIqW3h/exec';
+const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxT3_UfD0VB9Iqk8x-w3J2EG-e2b8bPpcpvcHyIWB_1ToQDsinurZbQNkDAaJPhTdRb/exec';
 
 // Helper: show message
 function showMessage(msg, isError = false) {
@@ -183,38 +183,36 @@ async function submitOrder() {
         submitBtn.disabled = true;
         submitBtn.textContent = 'Submitting...';
 
-        await fetch(APP_SCRIPT_URL, {
+        // ✅ Remove 'mode: no-cors' to read the response
+        const response = await fetch(APP_SCRIPT_URL, {
             method: 'POST',
-            mode: 'no-cors',   // ✅ Use no-cors to send request, but we can't read response
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(orderData)
         });
 
-        // Since we can't read the response, we show success optimistically
-        showMessage('✅ Order submitted! It will be processed soon.');
-        cart = [];
-        renderCart();
-        customerNameInput.value = '';
-        searchInput.value = '';
-        selectedItem = null;
-        stockDisplay.innerHTML = '📊 Select an item to see stock';
-        suggestionsGrid.style.display = 'none';
+        const result = await response.json();
 
+        if (result.success) {
+            const orderId = result.orderId || 'N/A';
+            showMessage(`✅ Order #${orderId} submitted! It will be processed soon.`);
+            // Clear everything
+            cart = [];
+            renderCart();
+            customerNameInput.value = '';
+            searchInput.value = '';
+            selectedItem = null;
+            stockDisplay.innerHTML = '📊 Select an item to see stock';
+            suggestionsGrid.style.display = 'none';
+        } else {
+            showMessage(`❌ Order failed: ${result.error || 'Unknown error'}`, true);
+        }
     } catch (err) {
-        showMessage('❌ Error: ' + err.message, true);
+        showMessage('❌ Network error: ' + err.message, true);
     } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = '✅ Submit Order';
     }
-}function escapeHtml(str) {
-    return str.replace(/[&<>]/g, function(m) {
-        if (m === '&') return '&amp;';
-        if (m === '<') return '&lt;';
-        if (m === '>') return '&gt;';
-        return m;
-    });
 }
-
 // When wholesaler changes, fetch items for that wholesaler
 wholesalerSelect.addEventListener('change', (e) => {
     const val = e.target.value;
