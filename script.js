@@ -144,7 +144,7 @@ function renderCart() {
     }
     let html = '';
     cart.forEach((item, idx) => {
-        html += `<tr>
+        html += <tr>
                     <td>${escapeHtml(item.itemname)}</td>
                     <td>${item.itemcode}</td>
                     <td>${item.qty}</td>
