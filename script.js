@@ -183,37 +183,30 @@ async function submitOrder() {
         submitBtn.disabled = true;
         submitBtn.textContent = 'Submitting...';
 
-        // ⚠️ Remove mode: 'no-cors' so we can read the response
-        const response = await fetch(APP_SCRIPT_URL, {
+        await fetch(APP_SCRIPT_URL, {
             method: 'POST',
+            mode: 'no-cors',   // ✅ Use no-cors to send request, but we can't read response
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(orderData)
         });
 
-        const result = await response.json();
-        if (result.success) {
-            const orderId = result.orderId || 'N/A';
-            showMessage(`✅ Order #${orderId} submitted! It will be processed soon.`);
-            // Clear cart
-            cart = [];
-            renderCart();
-            customerNameInput.value = '';
-            // Clear search input and selected item
-            searchInput.value = '';
-            selectedItem = null;
-            stockDisplay.innerHTML = '📊 Select an item to see stock';
-            suggestionsGrid.style.display = 'none';
-        } else {
-            showMessage('❌ Order failed: ' + (result.error || 'Unknown error'), true);
-        }
+        // Since we can't read the response, we show success optimistically
+        showMessage('✅ Order submitted! It will be processed soon.');
+        cart = [];
+        renderCart();
+        customerNameInput.value = '';
+        searchInput.value = '';
+        selectedItem = null;
+        stockDisplay.innerHTML = '📊 Select an item to see stock';
+        suggestionsGrid.style.display = 'none';
+
     } catch (err) {
         showMessage('❌ Error: ' + err.message, true);
     } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = '✅ Submit Order';
     }
-}
-function escapeHtml(str) {
+}function escapeHtml(str) {
     return str.replace(/[&<>]/g, function(m) {
         if (m === '&') return '&amp;';
         if (m === '<') return '&lt;';
