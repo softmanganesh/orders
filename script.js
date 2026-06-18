@@ -209,13 +209,14 @@ async function submitOrder() {
         submitBtn.disabled = true;
         submitBtn.textContent = 'Submitting...';
 
-        const response = await fetch(APP_SCRIPT_URL, {
+        // Use no-cors and text/plain to avoid preflight
+        await fetch(APP_SCRIPT_URL, {
             method: 'POST',
             mode: 'no-cors',
             headers: {
-                'Content-Type': 'application/json',  // Must match Apps Script expectation
+                'Content-Type': 'text/plain',  // simple content type – no preflight
             },
-            body: JSON.stringify(orderData)
+            body: JSON.stringify(orderData)    // still JSON – server will parse it
         });
 
         // Read the raw response as text first (to avoid parse errors)
