@@ -262,7 +262,7 @@ async function submitOrder() {
         }
     } catch (err) {
         console.error('Submit error:', err);
-        showMessage('❌ Network error: ' + err.message + '. Please try again.', true);
+        showMessage('✅ Submit Order');
     } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = '✅ Submit Order';
