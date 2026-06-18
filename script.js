@@ -197,11 +197,13 @@ async function submitOrder() {
     if (!customer) { showMessage('Enter your name', true); return; }
     if (cart.length === 0) { showMessage('Cart is empty', true); return; }
 
-    const formData = new URLSearchParams();
-    formData.append('wholesaler_id', wholesaler);
-    formData.append('customer', customer);
-    formData.append('orderDate', new Date().toISOString());
-    formData.append('items', JSON.stringify(cart.map(i => ({ itemcode: i.itemcode, qty: i.qty, free: i.free }))));
+    // Build JSON payload (matching your Apps Script expectation)
+    const orderData = {
+        wholesaler_id: wholesaler,
+        customer: customer,
+        orderDate: new Date().toISOString(),
+        items: cart.map(i => ({ itemcode: i.itemcode, qty: i.qty, free: i.free }))
+    };
 
     try {
         submitBtn.disabled = true;
@@ -210,49 +212,60 @@ async function submitOrder() {
         const response = await fetch(APP_SCRIPT_URL, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
+                'Content-Type': 'application/json',  // Must match Apps Script expectation
             },
-            body: formData.toString()
+            body: JSON.stringify(orderData)
         });
 
-        // Always show success because the order is already in the sheet
-        showMessage('✅ Order submitted successfully! It will be processed soon.');
-        
-        // Clear everything
-        cart = [];
-        renderCart();
-        customerNameInput.value = '';
-        searchInput.value = '';
-        selectedItem = null;
-        stockDisplay.innerHTML = '📊 Select an item to see stock';
-        suggestionsGrid.style.display = 'none';
+        // Read the raw response as text first (to avoid parse errors)
+        const text = await response.text();
+        console.log('Server response:', text);
 
-        // Optional: Log the response for debugging (without crashing)
+        let success = false;
+        let orderId = 'N/A';
+        let errorMsg = '';
+
+        // Try to parse JSON
         try {
-            const text = await response.text();
-            console.log('Server response:', text);
-        } catch (logError) {
-            // Ignore
+            const result = JSON.parse(text);
+            if (result.success) {
+                success = true;
+                orderId = result.orderId || 'N/A';
+            } else {
+                errorMsg = result.error || 'Unknown error';
+            }
+        } catch (parseErr) {
+            // JSON parsing failed – but if HTTP status is OK, assume success
+            if (response.ok) {
+                success = true;
+                orderId = 'Unknown (check sheet)';
+                console.warn('Response not JSON, but status OK. Assuming success.');
+            } else {
+                errorMsg = `Server error (${response.status}): ${text.substring(0, 100)}`;
+            }
         }
 
+        if (success) {
+            showMessage(`✅ Order #${orderId} submitted! It will be processed soon.`);
+            // Clear everything
+            cart = [];
+            renderCart();
+            customerNameInput.value = '';
+            searchInput.value = '';
+            selectedItem = null;
+            stockDisplay.innerHTML = '📊 Select an item to see stock';
+            suggestionsGrid.style.display = 'none';
+        } else {
+            showMessage(`❌ Order failed: ${errorMsg}`, true);
+        }
     } catch (err) {
-        // Even if fetch fails, we still show success because the order is likely in the sheet
-        showMessage('✅ Order submitted! It will be processed soon.', false);
-        // Still clear the cart
-        cart = [];
-        renderCart();
-        customerNameInput.value = '';
-        searchInput.value = '';
-        selectedItem = null;
-        stockDisplay.innerHTML = '📊 Select an item to see stock';
-        suggestionsGrid.style.display = 'none';
-        console.warn('Submit warning:', err.message);
+        console.error('Submit error:', err);
+        showMessage('❌ Network error: ' + err.message + '. Please try again.', true);
     } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = '✅ Submit Order';
     }
-}
-// ---------- EVENT LISTENERS ----------
+}// ---------- EVENT LISTENERS ----------
 wholesalerSelect.addEventListener('change', (e) => {
     const val = e.target.value;
     if (val) {
